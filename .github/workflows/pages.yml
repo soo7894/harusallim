@@ -22,8 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - run: npm install --package-lock=false --no-audit --no-fund
       - run: npm run build:pages
       - run: touch pages-dist/.nojekyll
       - uses: actions/configure-pages@v5
