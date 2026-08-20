@@ -1,43 +1,37 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+async function readBuiltJavascript() {
+  const assetUrl = new URL("../dist/assets/", import.meta.url);
+  const names = await readdir(assetUrl);
+  const javascript = names.filter((name) => name.endsWith(".js"));
+  return Promise.all(javascript.map((name) => readFile(new URL(name, assetUrl), "utf8")));
 }
 
-test("server-renders the completed app shell and metadata", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
+test("builds a GitHub Pages-ready Korean document", async () => {
+  const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
   assert.match(html, /<html lang="ko">/i);
   assert.match(html, /<title>하루살림 — 쉬운 돈 관리<\/title>/i);
-  assert.match(html, /내 살림을 불러오는 중이에요/);
-  assert.doesNotMatch(html, /codex-preview|Your site is taking shape/i);
+  assert.match(html, /property="og:image"/i);
+  assert.match(html, /src="\.\/assets\//i);
+  assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Building your site/i);
 });
 
-test("includes a standalone GitHub Pages entry", async () => {
-  const [html, entry, config] = await Promise.all([
-    readFile(new URL("../pages/index.html", import.meta.url), "utf8"),
-    readFile(new URL("../pages/main.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../vite.pages.config.ts", import.meta.url), "utf8"),
+test("ships the finished app without internal hosting or server-only code", async () => {
+  const bundles = await readBuiltJavascript();
+  const [page, model, packageJson, viteConfig] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/finance/model.ts", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(html, /<html lang="ko">/i);
-  assert.match(html, /id="root"/);
-  assert.match(entry, /import Home from "\.\.\/app\/page"/);
-  assert.match(entry, /createRoot/);
-  assert.match(config, /base:\s*"\/harusallim\/"/);
-  assert.match(config, /outDir:\s*"\.\.\/pages-dist"/);
+  assert.match(page, /하루살림/);
+  assert.match(page, /useStockPrices/);
+  assert.match(model, /localStorage/);
+  assert.match(bundles.join("\n"), /구글 계정으로/);
+  assert.doesNotMatch(page, /_sites-preview|SkeletonPreview|codex-preview/);
+  assert.doesNotMatch(packageJson, /vinext|wrangler|cloudflare/i);
+  assert.doesNotMatch(viteConfig, /hosting\.json|sites\(\)/i);
 });
-

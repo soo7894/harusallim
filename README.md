@@ -1,96 +1,60 @@
 # 하루살림
 
-경제 초보자도 부담 없이 쓸 수 있는 한국어 가계부 웹앱 MVP입니다. 은행·증권계좌를 연결하지 않고 수입, 지출, 주식 매수 내역을 직접 기록합니다. 현금성 자산과 주식 평가액을 합쳐 총자산을 보여주며, 주식 현재가는 데모·직접 입력·외부 API 중에서 선택할 수 있습니다.
+수입·지출과 투자 내역을 직접 기록하는 한국어 가계부 웹앱입니다. Google 로그인과 Firebase Firestore를 사용해 계정별로 데이터를 저장하며, GitHub Pages에서 무료로 공개됩니다.
 
-## 공개 미리보기
+- 공개 앱: https://soo7894.github.io/harusallim/
+- 저장소: https://github.com/soo7894/harusallim
 
-https://soo7894.github.io/harusallim/
+## 기능
 
-GitHub Pages 배포는 `main` 브랜치가 변경될 때마다 자동으로 갱신됩니다.
+- 수입·지출 기록, 분류, 날짜, 메모, 삭제
+- 주식 매수 내역과 현재가 직접 입력
+- 투자원금, 평가액, 손익, 수익률 계산
+- 현금성 자산과 주식 평가액을 합친 총자산
+- Google 로그인과 계정별 Firebase 저장
+- 모바일·데스크톱 반응형 화면
+- 데모 가격 또는 직접 입력 가격 사용
 
-## 바로 실행하기
+GitHub Pages는 정적 호스팅이라 비밀 API 키를 안전하게 보관할 서버가 없습니다. 그래서 주가 자동조회는 제외하고, 무료로 유지 가능한 데모 가격과 직접 입력 방식만 제공합니다.
 
-Node.js 22.13 이상이 필요합니다.
+## 다른 컴퓨터에서 이어서 작업하기
 
-```bash
-npm install
-npm run dev
-```
-
-브라우저에서 `http://localhost:3000`을 엽니다. 배포용 결과가 필요한 경우 아래 명령을 사용합니다.
-
-```bash
-npm run build
-npm run start
-```
-
-GitHub Pages용 정적 결과는 아래 명령으로 만듭니다.
+Node.js 22.13 이상과 Git이 필요합니다.
 
 ```bash
-npm run build:pages
-```
-
-pnpm을 사용해도 됩니다.
-
-```bash
+git clone https://github.com/soo7894/harusallim.git
+cd harusallim
+corepack enable
 pnpm install
 pnpm dev
 ```
 
-## 들어 있는 기능
+브라우저에서 `http://localhost:3001`을 엽니다.
 
-- 수입·지출 직접 기록, 분류, 날짜, 메모, 삭제
-- 증권사, 종목명, 종목코드/티커, 매수일, 매수가, 수량 직접 입력
-- 투자원금, 평가액, 손익, 수익률 자동 계산
-- 현금성 자산과 주식 평가액을 합친 총자산
-- 이번 달 수입, 지출, 투자, 남은 돈 요약
-- 데모 가격, 수동 현재가, 외부 가격 API 선택
-- 브라우저 `localStorage` 저장과 반응형 모바일 화면
+## 확인 명령
 
-처음 실행하면 예시 데이터가 들어 있습니다. 왼쪽의 `가격 연결`에서 현금성 자산과 가격 방식을 바꿀 수 있고, `데모 데이터로 초기화`를 누르면 처음 상태로 돌아갑니다.
-
-## 외부 주가 API 연결
-
-화면의 `가격 연결 → 외부 API`에서 아래 세 값을 입력합니다.
-
-1. API 요청 주소: 종목코드가 들어갈 자리를 `{ticker}`로 표시합니다. 예: `https://example.com/quote/{ticker}`
-2. 가격 응답 경로: JSON 응답 안에서 현재가가 있는 위치입니다. 예: `{ "data": { "price": 75000 } }`이면 `data.price`
-3. API 키: 선택 항목이며, 입력하면 요청의 `Authorization: Bearer ...` 헤더로 전달합니다.
-
-실제 연결 코드는 [`app/page.tsx`](app/page.tsx)의 `fetchLivePrices` 함수입니다. 사용하려는 API가 별도 헤더 이름, POST 요청, 토큰 발급, 환율 변환 또는 국내 주식 시장 구분을 요구한다면 이 함수의 `fetch` 부분을 해당 API 문서에 맞게 바꾸면 됩니다.
-
-### 응답 예시
-
-아래처럼 응답하는 API라면 가격 응답 경로에 `data.price`를 입력합니다.
-
-```json
-{
-  "data": {
-    "ticker": "005930",
-    "price": 75000
-  }
-}
+```bash
+pnpm lint
+pnpm test
 ```
 
-### API 키 보안
+`pnpm test`는 Pages용 정적 빌드와 핵심 데이터·보안 규칙 테스트를 함께 실행합니다.
 
-현재 MVP의 외부 API 설정은 로컬 체험을 위한 브라우저 직접 호출 방식입니다. 브라우저에서 호출하면 API 키가 사용자에게 보일 수 있고, 제공 업체의 CORS 정책에 따라 요청이 막힐 수도 있습니다. 실제 서비스로 배포할 때는 다음 구조를 권장합니다.
+## 배포
 
-```text
-브라우저 → 우리 서버의 /api/quote?ticker=005930 → 주가 제공 API
-```
+`main` 브랜치에 Push하면 [GitHub Actions](https://github.com/soo7894/harusallim/actions)에서 테스트 후 GitHub Pages에 자동 배포합니다. 별도의 유료 서버나 ChatGPT 배포 기능을 사용하지 않습니다.
 
-API 키는 서버 환경변수에 보관하고 브라우저에는 전달하지 않습니다. 한국투자증권처럼 접근 토큰 발급이 필요한 API도 이 서버 구간에서 처리하는 편이 안전합니다.
-
-## 데이터 저장 방식
-
-계좌 연동이나 로그인은 없습니다. 기록은 현재 브라우저의 `localStorage`에만 저장되므로 다른 기기나 다른 브라우저와 자동 동기화되지 않습니다. 브라우저 저장소를 지우면 기록도 사라질 수 있으므로, 정식 서비스에서는 서버 데이터베이스와 내보내기/가져오기 기능을 추가하는 것을 권장합니다.
+Firebase Authentication에서 `soo7894.github.io`가 승인된 도메인으로 등록되어 있어야 Google 로그인이 동작합니다. Firestore 규칙은 `firestore.rules`에 있으며 로그인한 본인의 `users/{uid}` 문서만 읽고 쓸 수 있도록 제한합니다.
 
 ## 주요 파일
 
-- `app/page.tsx`: 화면, 계산, 기록 저장, 주가 API 연결 로직
-- `app/globals.css`: 전체 디자인과 모바일 반응형 스타일
-- `app/layout.tsx`: 페이지 제목과 한국어 문서 설정
-- `pages/main.tsx`: GitHub Pages용 브라우저 진입점
+- `src/main.tsx`: 앱 시작점
+- `app/page.tsx`: 화면 흐름과 사용자 동작
+- `app/components`: 화면과 입력 모달
+- `app/finance/model.ts`: 금융 타입, 검증, 계산
+- `app/hooks`: 인증, 계정별 저장, 가격 처리
+- `app/firebase/client.ts`: Firebase 웹 연결 설정
+- `app/globals.css`: 디자인과 모바일 반응형 스타일
 - `.github/workflows/pages.yml`: GitHub Pages 자동 배포
+- `firestore.rules`: 계정별 데이터 접근 규칙
 
