@@ -140,8 +140,9 @@ export function InvestmentsView({ stocks, settings, summary, editingPrice, price
   </section>;
 }
 
-export function SettingsView({ user, displayName, settings, setSettings, syncState, syncLabel, onLogout, onResetDemo }: {
-  user: User;
+export function SettingsView({ user, isGuest, displayName, settings, setSettings, syncState, syncLabel, onLogout, onResetDemo }: {
+  user: User | null;
+  isGuest: boolean;
   displayName: string;
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -163,8 +164,8 @@ export function SettingsView({ user, displayName, settings, setSettings, syncSta
       </article>
       <aside className="settings-side">
         <article className="panel cash-panel"><span className="summary-icon mint">₩</span><h2>현금성 자산</h2><p>통장, 예금, 지갑 속 현금을 합쳐 적어주세요.</p><label><span>현재 금액</span><div className="money-input"><input inputMode="numeric" value={settings.cashBalance || ""} onChange={(event) => setSettings((value) => ({ ...value, cashBalance: Number(event.target.value.replace(/\D/g, "")) }))} /><b>원</b></div></label><small>자동으로 총자산에 더해져요.</small></article>
-        <article className="panel privacy-panel"><span>☁️</span><h3>내 계정에 자동 저장</h3><p>입력한 기록은 로그인한 계정에만 저장돼요. 증권계좌나 은행계좌는 연결하지 않아요.</p><small className={`sync-status ${syncState}`}>{syncLabel}</small></article>
-        <article className="panel account-panel"><span className="account-avatar">{displayName.slice(0, 1)}</span><div><strong>{displayName}</strong><small>{user.email}</small></div><button onClick={onLogout}>로그아웃</button></article>
+        <article className="panel privacy-panel"><span>{isGuest ? "👀" : "☁️"}</span><h3>{isGuest ? "저장되지 않는 체험 모드" : "내 계정에 자동 저장"}</h3><p>{isGuest ? "샘플 데이터로 기능을 둘러보고 있어요. 입력한 내용은 창을 닫으면 사라져요." : "입력한 기록은 로그인한 계정에만 저장돼요. 증권계좌나 은행계좌는 연결하지 않아요."}</p><small className={`sync-status ${isGuest ? "saved" : syncState}`}>{syncLabel}</small></article>
+        <article className="panel account-panel"><span className="account-avatar">{displayName.slice(0, 1)}</span><div><strong>{displayName}</strong><small>{isGuest ? "로그인하지 않음" : user?.email}</small></div><button onClick={onLogout}>{isGuest ? "둘러보기 나가기" : "로그아웃"}</button></article>
         <button className="reset-button" onClick={onResetDemo}>데모 데이터로 초기화</button>
       </aside>
     </div>
