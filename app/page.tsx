@@ -13,6 +13,8 @@ export default function Home() {
   const hydrated = useHydrated();
   const auth = useFirebaseAuth();
   const finance = useFinanceData(auth.db, auth.user);
+  const [guestMode, setGuestMode] = useState(false);
+  const isGuest = guestMode && !auth.user;
   const [tab, setTab] = useState<Tab>("home");
   const [modal, setModal] = useState<"transaction" | "stock" | null>(null);
   const [transactionType, setTransactionType] = useState<TransactionType>("expense");
@@ -34,6 +36,12 @@ export default function Home() {
     const timer = window.setTimeout(finance.clearNotice, 4_500);
     return () => window.clearTimeout(timer);
   }, [finance.notice, finance.clearNotice]);
+
+  function startGuestMode() {
+    finance.resetDemo();
+    setGuestMode(true);
+    setTab("home");
+  }
 
   const latestTransactions = useMemo(
     () => [...finance.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5),
@@ -93,7 +101,7 @@ export default function Home() {
     </main>;
   }
 
-  if (!auth.user) {
+  if (!auth.user && !isGuest) {
     return <main className="auth-screen">
       <section className="auth-card" aria-labelledby="login-title">
         <div className="auth-brand"><span className="brand-mark">ㅎ</span><strong>하루살림</strong></div>
@@ -103,6 +111,9 @@ export default function Home() {
         <button className="google-login-button" onClick={() => void auth.loginWithGoogle()} disabled={auth.busy}>
           <span aria-hidden="true">G</span>{auth.busy ? "구글로 이동하는 중…" : "Google 계정으로 계속하기"}
         </button>
+        <div className="auth-divider"><span>또는</span></div>
+        <button className="guest-login-button" onClick={startGuestMode}>로그인 없이 둘러보기</button>
+        <p className="guest-login-note">샘플 데이터로 자유롭게 체험해 보세요. 입력한 내용은 저장되지 않아요.</p>
         {auth.error && <p className="auth-error" role="alert">{auth.error}</p>}
         <div className="auth-safety"><span>🔒</span><p><strong>계정마다 따로 보관돼요</strong>다른 사용자는 내 가계정보를 볼 수 없어요.</p></div>
       </section>
@@ -110,8 +121,8 @@ export default function Home() {
   }
 
   const user = auth.user;
-  const displayName = String(user.displayName || user.email?.split("@")[0] || "나");
-  const syncLabel = finance.syncState === "saving" ? "저장하는 중…" : finance.syncState === "error" ? "저장 확인 필요" : "온라인 저장 완료";
+  const displayName = isGuest ? "둘러보기" : String(user?.displayName || user?.email?.split("@")[0] || "나");
+  const syncLabel = isGuest ? "저장되지 않는 체험 모드" : finance.syncState === "saving" ? "저장하는 중…" : finance.syncState === "error" ? "저장 확인 필요" : "온라인 저장 완료";
   const visibleToast = toast || finance.notice;
 
   return <div className="app-shell">
@@ -126,8 +137,8 @@ export default function Home() {
         <NavButton active={tab === "investments"} icon="↗" label="투자" onClick={() => setTab("investments")} />
         <NavButton active={tab === "settings"} icon="⚙" label="설정" onClick={() => setTab("settings")} />
       </nav>
-      <div className="sidebar-note"><span>🔒</span><p><strong>내 계정에 안전하게</strong>입력한 내용은 구글 계정별로 따로 저장돼요.</p></div>
-      <div className="profile-chip"><span>{displayName.slice(0, 1)}</span><div><strong>{displayName}</strong><small>{syncLabel}</small></div><button className="signout-button" onClick={() => void auth.logout()}>로그아웃</button></div>
+      <div className="sidebar-note"><span>{isGuest ? "👀" : "🔒"}</span><p><strong>{isGuest ? "편하게 둘러보세요" : "내 계정에 안전하게"}</strong>{isGuest ? "샘플 데이터이며 변경 내용은 저장되지 않아요." : "입력한 내용은 구글 계정별로 따로 저장돼요."}</p></div>
+      <div className="profile-chip"><span>{displayName.slice(0, 1)}</span><div><strong>{displayName}</strong><small>{syncLabel}</small></div><button className="signout-button" onClick={() => isGuest ? setGuestMode(false) : void auth.logout()}>{isGuest ? "나가기" : "로그아웃"}</button></div>
     </aside>
 
     <main className="main-content">
@@ -135,6 +146,8 @@ export default function Home() {
         <button className="brand" onClick={() => setTab("home")}><span className="brand-mark">ㅎ</span><strong>하루살림</strong></button>
         <button className="icon-button user-initial" onClick={() => setTab("settings")} aria-label="내 계정과 설정">{displayName.slice(0, 1)}</button>
       </header>
+
+      {isGuest && <aside className="guest-banner" role="status"><div><strong>👀 로그인 없이 둘러보는 중</strong><span>샘플 데이터로 체험 중이며 변경 내용은 저장되지 않아요.</span></div><button onClick={() => void auth.loginWithGoogle()}>Google 로그인하고 저장하기</button></aside>}
 
       {tab === "home" && <HomeView
         summary={finance.summary}
@@ -176,12 +189,13 @@ export default function Home() {
 
       {tab === "settings" && <SettingsView
         user={user}
+        isGuest={isGuest}
         displayName={displayName}
         settings={finance.settings}
         setSettings={finance.setSettings}
         syncState={finance.syncState}
         syncLabel={syncLabel}
-        onLogout={() => void auth.logout()}
+        onLogout={() => isGuest ? setGuestMode(false) : void auth.logout()}
         onResetDemo={resetDemo}
       />}
 
