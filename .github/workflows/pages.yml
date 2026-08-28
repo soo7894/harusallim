@@ -2,7 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, app-version]
   workflow_dispatch:
 
 permissions:
@@ -18,19 +18,45 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout homepage
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: homepage
+      - name: Checkout PWA app
+        uses: actions/checkout@v4
+        with:
+          ref: app-version
+          path: app-version
       - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: touch dist/.nojekyll
+          cache-dependency-path: |
+            homepage/pnpm-lock.yaml
+            app-version/pnpm-lock.yaml
+      - name: Build and test homepage
+        working-directory: homepage
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+      - name: Build and test PWA app
+        working-directory: app-version
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+      - name: Combine homepage and app
+        run: |
+          mkdir -p homepage/dist/app
+          cp -R app-version/dist/. homepage/dist/app/
+          touch homepage/dist/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: homepage/dist
 
   deploy:
     environment:
