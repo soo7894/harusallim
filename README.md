@@ -1,8 +1,9 @@
 # 하루살림
 
-수입·지출과 투자 내역을 직접 기록하는 한국어 가계부 웹앱입니다. Google 로그인과 Firebase Firestore를 사용해 계정별로 데이터를 저장하며, GitHub Pages에서 무료로 공개됩니다.
+수입·지출과 투자 내역을 기록하는 한국어 가계부 프로젝트입니다. 소개 홈페이지와 설치형 웹앱을 분리해 GitHub Pages에서 함께 배포합니다.
 
-- 공개 앱: https://soo7894.github.io/harusallim/
+- 소개 홈페이지: https://soo7894.github.io/harusallim/
+- 설치형 앱: https://soo7894.github.io/harusallim/app/
 - 저장소: https://github.com/soo7894/harusallim
 
 ## 기능
@@ -40,9 +41,13 @@ pnpm test
 
 `pnpm test`는 Pages용 정적 빌드와 핵심 데이터·보안 규칙 테스트를 함께 실행합니다.
 
-## 배포
+## 브랜치와 배포
 
-`main` 브랜치에 Push하면 [GitHub Actions](https://github.com/soo7894/harusallim/actions)에서 테스트 후 GitHub Pages에 자동 배포합니다. 별도의 유료 서버나 ChatGPT 배포 기능을 사용하지 않습니다.
+- `main`: 소개 홈페이지 전용
+- `app-version`: 로그인·가계부·PWA 앱 전용
+- 한쪽 화면의 변경은 다른 쪽에 자동으로 적용하지 않습니다.
+
+두 브랜치 중 하나에 Push하면 GitHub Actions가 각각 빌드한 뒤 홈페이지는 루트에, 앱은 `/app/`에 배포합니다. 별도의 유료 서버나 ChatGPT 배포 기능을 사용하지 않습니다.
 
 Firebase Authentication에서 `soo7894.github.io`가 승인된 도메인으로 등록되어 있어야 Google 로그인이 동작합니다. Firestore 규칙은 `firestore.rules`에 있으며 로그인한 본인의 `users/{uid}` 문서만 읽고 쓸 수 있도록 제한합니다.
 
