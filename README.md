@@ -1,8 +1,10 @@
 # 하루살림
 
+이 브랜치는 `https://soo7894.github.io/harusallim/app/`에 배포되는 설치형 앱 전용입니다. 소개 홈페이지는 `main` 브랜치에서 별도로 관리합니다.
+
 수입·지출과 투자 내역을 직접 기록하는 한국어 가계부 웹앱입니다. Google 로그인과 Firebase Firestore를 사용해 계정별로 데이터를 저장하며, GitHub Pages에서 무료로 공개됩니다.
 
-- 공개 앱: https://soo7894.github.io/harusallim/
+- 공개 앱: https://soo7894.github.io/harusallim/app/
 - 저장소: https://github.com/soo7894/harusallim
 
 ## 기능
