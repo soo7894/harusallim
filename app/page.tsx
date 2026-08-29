@@ -13,7 +13,8 @@ export default function Home() {
   const hydrated = useHydrated();
   const auth = useFirebaseAuth();
   const finance = useFinanceData(auth.db, auth.user);
-  const [guestMode, setGuestMode] = useState(false);
+  const [guestMode, setGuestMode] = useState(() => typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("guest") === "1");
   const isGuest = guestMode && !auth.user;
   const [tab, setTab] = useState<Tab>("home");
   const [modal, setModal] = useState<"transaction" | "stock" | null>(null);
