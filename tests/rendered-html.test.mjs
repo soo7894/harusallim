@@ -18,7 +18,7 @@ test("builds a GitHub Pages-ready Korean document", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Building your site/i);
 });
 
-test("ships the finished app without internal hosting or server-only code", async () => {
+test("ships the public homepage with a separate app link", async () => {
   const bundles = await readBuiltJavascript();
   const [page, model, packageJson, viteConfig] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -28,9 +28,10 @@ test("ships the finished app without internal hosting or server-only code", asyn
   ]);
 
   assert.match(page, /하루살림/);
-  assert.match(page, /useStockPrices/);
+  assert.match(page, /\.\/app\//);
   assert.match(model, /localStorage/);
-  assert.match(bundles.join("\n"), /구글 계정으로/);
+  assert.match(bundles.join("\n"), /하루살림 앱 열기/);
+  assert.doesNotMatch(bundles.join("\n"), /구글 계정으로 계속하기/);
   assert.doesNotMatch(page, /_sites-preview|SkeletonPreview|codex-preview/);
   assert.doesNotMatch(packageJson, /vinext|wrangler|cloudflare/i);
   assert.doesNotMatch(viteConfig, /hosting\.json|sites\(\)/i);
